@@ -7,11 +7,12 @@ import { HLTVConfig } from '../config'
 import { fetchPage, toArray, getMatchFormatAndMap } from '../utils/mappers'
 
 type GetResultsArguments =
-  | { pages?: number; teamID?: number; eventID?: never }
-  | { pages?: never; teamID?: number; eventID?: number }
+  | { pages?: number; startingPage?: number, teamID?: number; eventID?: never }
+  | { pages?: never; startingPage?: never, teamID?: number; eventID?: number }
 
 export const getResults = (config: HLTVConfig) => async ({
   pages = 1,
+  startingPage = 0,
   teamID,
   eventID
 }: GetResultsArguments): Promise<MatchResult[]> => {
@@ -19,10 +20,14 @@ export const getResults = (config: HLTVConfig) => async ({
     console.error('getLatestResults: pages cannot be less than 1')
     return []
   }
+  if (startingPage < 0) {
+    console.error('getLatestResults: startingPage cannot be less than 0')
+    return []
+  }
 
   let matches = [] as MatchResult[]
 
-  for (let i = 0; i < pages; i++) {
+  for (let i = startingPage; i < pages + startingPage; i++) {
     let url = `${config.hltvUrl}/results?offset=${i * 100}`
 
     if (teamID) url += `&team=${teamID}`
